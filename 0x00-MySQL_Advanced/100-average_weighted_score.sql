@@ -6,14 +6,15 @@
 -- user_id, a users.id value (you can assume user_id is linked to an existing users)
 
 DELIMITER $$
-CREATE PROCEDURE ComputeAverageWeightedScoreForUser(IN user_id INTEGER)
+DROP PROCEDURE IF EXISTS ComputeAverageWeightedScoreForUser;
+CREATE PROCEDURE ComputeAverageWeightedScoreForUser (IN user_id INT)
 BEGIN
-    DECLARE avg_score DECIMAL(10, 2);
-    SELECT AVG(score) INTO avg_score FROM corrections WHERE user_id = user_id;
-    DECLARE avg_weight DECIMAL(10, 2);
-    SELECT AVG(weight) INTO avg_weight FROM corrections WHERE user_id = user_id;
-    DECLARE avg_weighted_score DECIMAL(10, 2);
-    SET avg_weighted_score = avg_score * avg_weight;
-    UPDATE users SET average_score = avg_weighted_score WHERE id = user_id;
+    UPDATE users set average_score = (SELECT
+    SUM(corrections.score * projects.weight) / SUM(projects.weight)
+    FROM corrections
+    INNER JOIN projects
+    ON projects.id = corrections.project_id
+    where corrections.user_id = user_id)
+    where users.id = user_id;
 END $$
-DELIMITER;
+DELIMITER ;
