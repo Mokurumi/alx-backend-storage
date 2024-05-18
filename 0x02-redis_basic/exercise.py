@@ -56,16 +56,21 @@ def replay(method: Callable) -> None:
     replay method
     '''
     key = method.__qualname__
-    redis_db = method.__self__._redis
-    inputs = redis_db.lrange(key + ":inputs", 0, -1)
-    outputs = redis_db.lrange(key + ":outputs", 0, -1)
+    inputs = key + ":inputs"
+    outputs = key + ":outputs"
 
-    print(f"{key} was called {redis_db.get(key)} times:")
-    for input, output in zip(inputs, outputs):
-        in_ans = input.decode('utf-8')
-        out_ans = output.decode('utf-8')
-        print(f"{key}(*{in_ans}) -> {out_ans}")
+    redis = redis.Redis(host='localhost', port=6379, db=0)
+    calls = redis.get(key)
+    if calls is None:
+        return
 
+    print(f"{key} was called {calls.decode()} times:")
+    inputs_list = redis.lrange(inputs, 0, -1)
+    outputs_list = redis.lrange(outputs, 0, -1)
+
+    for input, output in zip(inputs_list, outputs_list):
+        print(f"{key}({input.decode()}) -> {output.decode()}")
+    return None
 
 
 class Cache:
