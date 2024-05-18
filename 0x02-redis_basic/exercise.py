@@ -59,17 +59,17 @@ def replay(method: Callable) -> None:
     inputs = key + ":inputs"
     outputs = key + ":outputs"
 
-    redis = redis.Redis(host='localhost', port=6379, db=0)
+    redis = redis.Redis()
     calls = redis.get(key)
     if calls is None:
         return
 
-    print(f"{key} was called {calls.decode()} times:")
+    print(f"{key} was called {calls.decode('utf-8')} times:")
     inputs_list = redis.lrange(inputs, 0, -1)
     outputs_list = redis.lrange(outputs, 0, -1)
 
     for input, output in zip(inputs_list, outputs_list):
-        print(f"{key}({input.decode()}) -> {output.decode()}")
+        print(f"{key}({input.decode('utf-8')}) -> {output.decode('utf-8')}")
     return None
 
 
