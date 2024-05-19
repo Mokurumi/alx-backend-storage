@@ -1,32 +1,26 @@
 #!/usr/bin/env python3
 '''
-MongoDB log stats
+log stats
 '''
 
 
-def log_stats(mongo_collection):
+from pymongo import MongoClient
+
+
+def log_stats():
     '''
     log_stats method
     '''
-    print(f"{mongo_collection.count_documents({})} logs")
+    # localhost
+    client = MongoClient('mongodb://127.0.0.1:27017')
+    db = client.logs
+    collection = db.nginx
+    total = collection.count_documents({})
+    print(f"{total} logs")
     print("Methods:")
-    print(f"\tmethod GET: {mongo_collection.count_documents(
-        {'method': 'GET'})}")
-    print(f"\tmethod POST: {mongo_collection.count_documents(
-        {'method': 'POST'})}")
-    print(f"\tmethod PUT: {mongo_collection.count_documents(
-        {'method': 'PUT'})}")
-    print(f"\tmethod PATCH: {mongo_collection.count_documents(
-        {'method': 'PATCH'})}")
-    print(f"\tmethod DELETE: {mongo_collection.count_documents(
-        {'method': 'DELETE'})}")
-    print(f"{mongo_collection.count_documents(
-        {'method': 'GET', 'path': '/status'})} status check")
-    print("IPs:")
-    ips = mongo_collection.aggregate([
-        {"$group": {"_id": "$ip", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": 10}
-    ])
-    for ip in ips:
-        print(f"\t{ip.get('_id')}: {ip.get('count')}")
+    methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+    for method in methods:
+        count = collection.count_documents({"method": method})
+        print(f"\tmethod {method}: {count}")
+    status = collection.count_documents({"method": "GET", "path": "/status"})
+    print(f"{status} status check")
